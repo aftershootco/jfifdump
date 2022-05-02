@@ -188,4 +188,3 @@ impl Handler for TextFormat {
         println!("Unknown(0x{:X}): Length {}", marker, data.len());
     }
 }
-

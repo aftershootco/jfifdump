@@ -487,4 +487,3 @@ pub fn get_marker_string(data: &[u8], max: usize) -> String {
 
     result
 }
-
