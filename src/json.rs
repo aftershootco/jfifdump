@@ -4,6 +4,7 @@ use json::object::Object;
 use json::{object, JsonValue};
 use crate::reader::get_marker_string;
 
+#[derive(Debug)]
 pub struct JsonFormat {
     markers: Vec<JsonValue>,
     verbose: bool,

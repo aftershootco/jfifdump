@@ -1,3 +1,4 @@
+#![deny(missing_debug_implementations)]
 //! # JFIF Dump
 //!
 //! A crate for reading the content of a JFIF file without decoding JPEG image data.

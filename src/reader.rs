@@ -4,6 +4,7 @@ use std::io::{Error as IoError, Read};
 pub use crate::JfifError;
 
 /// A reader for JFIF files
+#[derive(Debug)]
 pub struct Reader<R: Read> {
     reader: R,
     current_marker: Option<u8>,
@@ -95,7 +96,9 @@ impl<R: Read> Reader<R> {
             0xDB => Ok(SegmentKind::Dqt(self.read_dqt()?)),
             0xC4 => Ok(SegmentKind::Dht(self.read_dht()?)),
             0xCC => Ok(SegmentKind::Dac(self.read_dac()?)),
-            0xC0..=0xC3 | 0xC5..=0xC7 | 0xC9..=0xCB | 0xCD..=0xCF => Ok(SegmentKind::Frame(self.read_frame(marker)?)),
+            0xC0..=0xC3 | 0xC5..=0xC7 | 0xC9..=0xCB | 0xCD..=0xCF => {
+                Ok(SegmentKind::Frame(self.read_frame(marker)?))
+            }
             0xDA => Ok(SegmentKind::Scan(self.read_scan()?)),
             0xDD => Ok(SegmentKind::Dri(self.read_dri()?)),
             0xD0..=0xD7 => Ok(SegmentKind::Rst(self.read_rst(marker - 0xD0)?)),
@@ -104,10 +107,8 @@ impl<R: Read> Reader<R> {
                 marker,
                 data: self.read_segment()?,
             }),
-        }.map(|kind| Segment {
-            kind,
-            position,
-        })
+        }
+        .map(|kind| Segment { kind, position })
     }
 
     fn read_segment(&mut self) -> Result<Vec<u8>, JfifError> {
@@ -147,11 +148,7 @@ impl<R: Read> Reader<R> {
             }));
         }
 
-
-        Ok(SegmentKind::App {
-            nr,
-            data,
-        })
+        Ok(SegmentKind::App { nr, data })
     }
 
     fn read_dqt(&mut self) -> Result<Vec<Dqt>, JfifError> {
@@ -222,16 +219,10 @@ impl<R: Read> Reader<R> {
             let (class, dest) = self.read_u4_tuple()?;
             let value = self.read_u8()?;
 
-            params.push(DacParam {
-                class,
-                dest,
-                value,
-            })
+            params.push(DacParam { class, dest, value })
         }
 
-        Ok(Dac {
-            params,
-        })
+        Ok(Dac { params })
     }
 
     fn read_scan(&mut self) -> Result<Scan, JfifError> {
@@ -249,7 +240,7 @@ impl<R: Read> Reader<R> {
                 dc_table,
                 ac_table,
             })
-        };
+        }
 
         let selection_start = self.read_u8()?;
         let selection_end = self.read_u8()?;
@@ -306,10 +297,7 @@ impl<R: Read> Reader<R> {
 
     fn read_rst(&mut self, nr: u8) -> Result<Rst, JfifError> {
         let data = self.read_scan_data()?;
-        Ok(Rst {
-            nr,
-            data,
-        })
+        Ok(Rst { nr, data })
     }
 
     fn read_dri(&mut self) -> Result<u16, JfifError> {
@@ -365,12 +353,10 @@ impl<R: Read> Reader<R> {
     }
 }
 
+#[derive(Debug)]
 pub enum SegmentKind {
     Eoi,
-    App {
-        nr: u8,
-        data: Vec<u8>,
-    },
+    App { nr: u8, data: Vec<u8> },
     App0Jfif(App0Jfif),
     Dqt(Vec<Dqt>),
     Dht(Vec<Dht>),
@@ -380,12 +366,10 @@ pub enum SegmentKind {
     Dri(u16),
     Rst(Rst),
     Comment(Vec<u8>),
-    Unknown {
-        marker: u8,
-        data: Vec<u8>,
-    },
+    Unknown { marker: u8, data: Vec<u8> },
 }
 
+#[derive(Debug)]
 pub struct Segment {
     pub kind: SegmentKind,
     pub position: usize,
@@ -403,12 +387,14 @@ pub struct App0Jfif {
     pub thumbnail: Option<Vec<u8>>,
 }
 
+#[derive(Debug)]
 pub struct Dqt {
     pub precision: u8,
     pub dest: u8,
     pub values: Box<[u8; 64]>,
 }
 
+#[derive(Debug)]
 pub struct Dht {
     pub class: u8,
     pub dest: u8,
@@ -416,22 +402,26 @@ pub struct Dht {
     pub values: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct DacParam {
     pub class: u8,
     pub dest: u8,
     pub value: u8,
 }
 
+#[derive(Debug)]
 pub struct Dac {
     pub params: Vec<DacParam>,
 }
 
+#[derive(Debug)]
 pub struct ScanComponent {
     pub id: u8,
     pub dc_table: u8,
     pub ac_table: u8,
 }
 
+#[derive(Debug)]
 pub struct Scan {
     pub components: Vec<ScanComponent>,
     pub selection_start: u8,
@@ -441,11 +431,13 @@ pub struct Scan {
     pub data: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct Rst {
     pub nr: u8,
     pub data: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct FrameComponent {
     pub id: u8,
     pub horizontal_sampling_factor: u8,
@@ -453,6 +445,7 @@ pub struct FrameComponent {
     pub quantization_table: u8,
 }
 
+#[derive(Debug)]
 pub struct Frame {
     pub sof: u8,
     pub precision: u8,
@@ -477,7 +470,7 @@ impl Frame {
             0xCD => "Differential sequential DCT arithmetic",
             0xCE => "Differential progressive DCT arithmetic",
             0xCF => "Differential lossless arithmetic",
-            _ => "Unknown"
+            _ => "Unknown",
         }
     }
 }
@@ -494,3 +487,4 @@ pub fn get_marker_string(data: &[u8], max: usize) -> String {
 
     result
 }
+
