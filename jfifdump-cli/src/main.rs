@@ -68,3 +68,4 @@ fn create_clap_app() -> Command<'static> {
                 .required(true),
         )
 }
+
